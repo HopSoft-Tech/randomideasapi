@@ -1,0 +1,14 @@
+{
+  "name": "randomideas",
+  "version": "1.0.0",
+  "description": "Idea Sharing app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "HopSoft",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
