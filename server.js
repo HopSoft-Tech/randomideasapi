@@ -1,6 +1,10 @@
 const express = require("express");
+require('dotenv').config();
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 5000; 
+const connectDB = require('./config/db');
+
+connectDB();
 
 // Body parser middleware
 // Sends Raw Json to the Server
