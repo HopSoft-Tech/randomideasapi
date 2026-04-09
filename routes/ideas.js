@@ -28,11 +28,33 @@ const Idea = require("../models/Idea");
 //   },
 // ];
 
-// GET all ideas
+// GET all ideas and also filter by tagName
+// when you hit this endpoint /api/ideas?page=1&limit=5
+// Limit the Number of ideas Displayed per page
 router.get("/", async (req, res) => {
   try {
-    const ideas = await Idea.find();
-    res.json({ success: true, data: ideas });
+    let query = {};
+
+    if (req.query.tag) {
+      query.tag = req.query.tag;
+    }
+
+    if (req.query.username) {
+      query.username = req.query.username;
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const ideas = await Idea.find(query).skip(skip).limit(limit);
+
+    res.json({
+      success: true,
+      page,
+      limit,
+      data: ideas,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, error: "Something went wrong" });
@@ -43,6 +65,12 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const idea = await Idea.findById(req.params.id);
+    if (!idea) {
+      return res.status(404).json({
+        success: false,
+        message: "Idea not found",
+      });
+    }
     res.json({ success: true, data: idea });
   } catch (error) {
     console.log(error);
@@ -52,6 +80,13 @@ router.get("/:id", async (req, res) => {
 
 // Add an Idea using the Post Method
 router.post("/", async (req, res) => {
+  // Validate text Field
+  if (!req.body.text) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Please add a text Field now!" });
+  }
+
   const idea = new Idea({
     text: req.body.text,
     tag: req.body.tag,
@@ -78,12 +113,38 @@ router.put("/:id", async (req, res) => {
           tag: req.body.tag,
         },
       },
-      { new: true },
+      { returnDocument: "after" },
     );
     res.json({ success: true, data: updatedIdea });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ success: false, error: "Something went wrong" }); 
+    res.status(500).json({ success: false, error: "Something went wrong" });
+  }
+});
+
+// Like an Idea or Increase Liked Idea
+router.put("/:id/like", async (req, res) => {
+  try {
+    const likedIdea = await Idea.findByIdAndUpdate(
+      req.params.id,
+      {
+        // Use the mongodb increase operator
+        $inc: { likes: 1 }, // increase by 1
+      },
+      { returnDocument: "after" },
+    );
+
+    if (!likedIdea) {
+      return res.status(404).json({
+        success: false,
+        message: "Idea not found",
+      });
+    }
+
+    res.json({ success: true, data: likedIdea });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error: "Something went wrong" });
   }
 });
 
@@ -105,11 +166,17 @@ router.put("/:id", async (req, res) => {
 // OR use this to Delete Idea
 router.delete("/:id", async (req, res) => {
   try {
-    await Idea.findByIdAndDelete(req.params.id);
-    res.json({success: true, data: {}})
+    const deletedIdea = await Idea.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Idea not found",
+      });
+    }
+    res.json({ success: true, data: deletedIdea });
   } catch (error) {
-     console.log(error);
-     res.status(500).json({ success: false, error: "Something went wrong" }); 
+    console.log(error);
+    res.status(500).json({ success: false, error: "Something went wrong" });
   }
 });
 

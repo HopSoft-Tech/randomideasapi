@@ -12,10 +12,14 @@ const IdeaSchema = new mongoose.Schema({
   username: {
     type: String,
   },
+  likes: {
+    type: Number,
+    default: 0,
+  },
   date: {
     type: Date,
     default: Date.now,
   },
 });
 
-module.exports = mongoose.model('Idea', IdeaSchema);
+module.exports = mongoose.model("Idea", IdeaSchema);
